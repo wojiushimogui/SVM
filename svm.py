@@ -1,7 +1,7 @@
 #################################################  
 # SVM: support vector machine  
 # Author : wojiushimogui  
-# Date   :   
+# Date   :  
 # HomePage : 
 # Email  : 
 #################################################  
@@ -23,7 +23,7 @@ def calcKernelValue(matrix_x, sample_x, kernelOption):
 		sigma = kernelOption[1]  
 		if sigma == 0:  
 			sigma = 1.0  
-		for i in xrange(numSamples):  
+		for i in range(numSamples):  
 			diff = matrix_x[i, :] - sample_x  
 			kernelValue[i] = exp(diff * diff.T / (-2.0 * sigma**2))  
 	else:  
@@ -35,7 +35,7 @@ def calcKernelValue(matrix_x, sample_x, kernelOption):
 def calcKernelMatrix(train_x, kernelOption):  
 	numSamples = train_x.shape[0]  
 	kernelMatrix = mat(zeros((numSamples, numSamples)))  
-	for i in xrange(numSamples):  
+	for i in range(numSamples):  
 		kernelMatrix[:, i] = calcKernelValue(train_x, train_x[i, :], kernelOption)  
 	return kernelMatrix  
   
@@ -91,7 +91,8 @@ def selectAlpha_j(svm, alpha_i, error_i):
 			alpha_j = int(random.uniform(0, svm.numSamples))  
 		error_j = calcError(svm, alpha_j)  
       
-	return alpha_j, error_j  
+	return alpha_j, error_j 
+    
   
   
 # the inner loop for optimizing alpha i and alpha j  
@@ -108,9 +109,7 @@ def innerLoop(svm, alpha_i):
     # 1) if y[i]*E_i < 0, so yi*f(i) < 1, if alpha < C, violate!(alpha = C will be correct)   
     # 2) if y[i]*E_i > 0, so yi*f(i) > 1, if alpha > 0, violate!(alpha = 0 will be correct)  
     # 3) if y[i]*E_i = 0, so yi*f(i) = 1, it is on the boundary, needless optimized  
-	if (svm.train_y[alpha_i] * error_i < -svm.toler) and (svm.alphas[alpha_i] < svm.C) or\  
-		(svm.train_y[alpha_i] * error_i > svm.toler) and (svm.alphas[alpha_i] > 0):  
-  
+	if (svm.train_y[alpha_i] * error_i < -svm.toler) and (svm.alphas[alpha_i] < svm.C) or (svm.train_y[alpha_i] * error_i > svm.toler) and (svm.alphas[alpha_i] > 0):    
         # step 1: select alpha j  
 		alpha_j, error_j = selectAlpha_j(svm, alpha_i, error_i)  
 		alpha_i_old = svm.alphas[alpha_i].copy()  
@@ -127,8 +126,7 @@ def innerLoop(svm, alpha_i):
 			return 0  
   
         # step 3: calculate eta (the similarity of sample i and j)  
-		eta = 2.0 * svm.kernelMat[alpha_i, alpha_j] - svm.kernelMat[alpha_i, alpha_i] \  
-                  - svm.kernelMat[alpha_j, alpha_j]  
+		eta = 2.0 * svm.kernelMat[alpha_i, alpha_j] - svm.kernelMat[alpha_i, alpha_i] - svm.kernelMat[alpha_j, alpha_j]  
 		if eta >= 0:  
 			return 0  
   
@@ -147,18 +145,16 @@ def innerLoop(svm, alpha_i):
 			return 0  
   
         # step 7: update alpha i after optimizing aipha j  
-		svm.alphas[alpha_i] += svm.train_y[alpha_i] * svm.train_y[alpha_j] \  
-                                * (alpha_j_old - svm.alphas[alpha_j])  
+		svm.alphas[alpha_i] += svm.train_y[alpha_i] * svm.train_y[alpha_j] * (alpha_j_old - svm.alphas[alpha_j])  
   
         # step 8: update threshold b  
-		b1 = svm.b - error_i - svm.train_y[alpha_i] * (svm.alphas[alpha_i] - alpha_i_old) \  
-                                                    * svm.kernelMat[alpha_i, alpha_i] \  
-                             - svm.train_y[alpha_j] * (svm.alphas[alpha_j] - alpha_j_old) \  
-                                                    * svm.kernelMat[alpha_i, alpha_j]  
-		b2 = svm.b - error_j - svm.train_y[alpha_i] * (svm.alphas[alpha_i] - alpha_i_old) \  
-                                                    * svm.kernelMat[alpha_i, alpha_j] \  
-                             - svm.train_y[alpha_j] * (svm.alphas[alpha_j] - alpha_j_old) \  
-                                                    * svm.kernelMat[alpha_j, alpha_j]  
+		b1 = svm.b - error_i - svm.train_y[alpha_i] * (svm.alphas[alpha_i] - alpha_i_old)* svm.kernelMat[alpha_i, alpha_i] \
+		*svm.train_y[alpha_j] * (svm.alphas[alpha_j] - alpha_j_old) \
+		* svm.kernelMat[alpha_i, alpha_j]  
+		b2 = svm.b - error_j - svm.train_y[alpha_i] * (svm.alphas[alpha_i] - alpha_i_old) \
+		* svm.kernelMat[alpha_i, alpha_j] \
+		- svm.train_y[alpha_j] * (svm.alphas[alpha_j] - alpha_j_old) \
+		* svm.kernelMat[alpha_j, alpha_j]  
 		if (0 < svm.alphas[alpha_i]) and (svm.alphas[alpha_i] < svm.C):  
 			svm.b = b1  
 		elif (0 < svm.alphas[alpha_j]) and (svm.alphas[alpha_j] < svm.C):  
@@ -175,12 +171,19 @@ def innerLoop(svm, alpha_i):
 		return 0  
   
   
-# the main training procedure  
+# the main training procedure 
+#train_x:数据集
+#train_y：类别标签
+#C:常数
+#toler：容错率
+#maxIter：退出前的循环次数 
 def trainSVM(train_x, train_y, C, toler, maxIter, kernelOption = ('rbf', 1.0)):  
     # calculate training time  
-	startTime = time.time()  
-  
-    # init data struct for svm  
+	startTime = time.time() #记录训练时的开始时间 
+	#print (train_x)
+	#print(train_y)
+    # init data struct for svm 
+	#train_x和train_y居然不是矩阵？？不是传过来的参数就是矩阵嘛？？
 	svm = SVMStruct(mat(train_x), mat(train_y), C, toler, kernelOption)  
       
     # start training  
@@ -196,7 +199,7 @@ def trainSVM(train_x, train_y, C, toler, maxIter, kernelOption = ('rbf', 1.0)):
   
         # update alphas over all training examples  
 		if entireSet:  
-			for i in xrange(svm.numSamples):  
+			for i in range(svm.numSamples):  
 				alphaPairsChanged += innerLoop(svm, i)  
 			print ('---iter:%d entire set, alpha pairs changed:%d' % (iterCount, alphaPairsChanged)  )
 			iterCount += 1  
@@ -228,7 +231,7 @@ def testSVM(svm, test_x, test_y):
 	supportVectorLabels = svm.train_y[supportVectorsIndex]  
 	supportVectorAlphas = svm.alphas[supportVectorsIndex]  
 	matchCount = 0  
-	for i in xrange(numTestSamples):  
+	for i in range(numTestSamples):  
 		kernelValue = calcKernelValue(supportVectors, test_x[i, :], svm.kernelOpt)  
 		predict = kernelValue.T * multiply(supportVectorLabels, supportVectorAlphas) + svm.b  
 		if sign(predict) == sign(test_y[i]):  
@@ -244,7 +247,7 @@ def showSVM(svm):
 		return 1  
   
     # draw all samples  
-	for i in xrange(svm.numSamples):  
+	for i in range(svm.numSamples):  
 		if svm.train_y[i] == -1:  
 			plt.plot(svm.train_x[i, 0], svm.train_x[i, 1], 'or')  
 		elif svm.train_y[i] == 1:  
